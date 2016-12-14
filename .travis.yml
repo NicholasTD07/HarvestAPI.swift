@@ -2,6 +2,7 @@ language: objective-c
 osx_image: xcode8
 script:
   - set -o pipefail
+  - pwd
   - xcodebuild -version
   - xcodebuild -showsdks
   # - swift test

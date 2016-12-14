@@ -3,6 +3,8 @@ osx_image: xcode8
 script:
   - set -o pipefail
   - pwd
+  - which xcodebuild
+  - type xcodebuild
   - xcodebuild -version
   - xcodebuild -showsdks
   # - swift test

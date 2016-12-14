@@ -9,5 +9,7 @@ let package = Package(
                  majorVersion: 4),
         .Package(url: "https://github.com/thoughtbot/Argo.git",
                  majorVersion: 4),
+        .Package(url: "https://github.com/thoughtbot/Curry.git",
+                 majorVersion: 3),
     ]
 )

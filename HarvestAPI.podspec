@@ -21,4 +21,5 @@ Pod::Spec.new do |s|
   s.dependency 'Alamofire', '~> 4.0'
   s.dependency 'Result', '~> 3.0.0'
   s.dependency 'Argo', '~> 4.0'
+  s.dependency 'Curry', '~> 3.0'
 end

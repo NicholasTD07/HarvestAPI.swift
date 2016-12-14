@@ -1,0 +1,11 @@
+language: objective-c
+osx_image: xcode8
+script:
+  - set -o pipefail
+  - xcodebuild -version
+  - xcodebuild -showsdks
+  # - swift test
+  - swift package generate-xcodeproj --enable-code-coverage
+  - xcodebuild -scheme HarvestAPI -enableCodeCoverage YES test | xcpretty
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

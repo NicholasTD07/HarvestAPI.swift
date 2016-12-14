@@ -7,8 +7,7 @@ script:
   - type xcodebuild
   - xcodebuild -version
   - xcodebuild -showsdks
-  # - swift test
-  - swift package generate-xcodeproj --enable-code-coverage
-  - xcodebuild -scheme HarvestAPI -enableCodeCoverage YES test | xcpretty
+  - cp -rv ./Tests /private/tmp/ # Hack for Travis
+  - make build-for-coverage
 after_success:
   - bash <(curl -s https://codecov.io/bash)

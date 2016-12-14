@@ -26,6 +26,15 @@ extension Model.Project: Decodable {
             /* <*> j <| "tasks" */
     }
 }
+
+extension Model.Task: Decodable {
+    public static func decode(_ json: JSON) -> Decoded<Model.Task> {
+        return curry(Model.Task.init)
+            <^> json <| "id"
+            <*> json <| "name"
+            <*> json <| "billable"
+    }
+}
     /** From: https://github.com/NicholasTD07/TTTTT/blob/master/2016-08---Py---Harvest-Season/harvest_season.py
     entry_payload = {
         'notes': notes,

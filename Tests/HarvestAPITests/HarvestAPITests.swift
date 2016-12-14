@@ -12,10 +12,16 @@ class HarvestAPITests: XCTestCase {
         test(decoded: project)
     }
 
+    func testDecodingTask() {
+        let task: Decoded<Model.Task> = decode(json(fromFile: "task")!)
+
+        test(decoded: task)
+    }
+
     private func test<T>(decoded: Decoded<T>) {
         switch decoded {
         case let .success(x): XCTAssert(decoded.description == "Success(\(x))")
-        default: XCTFail("Unexpected Case Occurred")
+        default: XCTFail("Unexpected Case Occurred, \(decoded)")
         }
     }
 }

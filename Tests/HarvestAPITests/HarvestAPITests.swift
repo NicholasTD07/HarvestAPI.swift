@@ -1,12 +1,22 @@
 import Foundation
 import XCTest
+
+import Argo
+
 import HarvestAPI
 
 class HarvestAPITests: XCTestCase {
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        //// XCTAssertEqual(HarvestAPI().text, "Hello, World!")
+    func testDecodingProject() {
+        let project: Decoded<Model.Project> = decode(json(fromFile: "project")!)
+
+        test(decoded: project)
+    }
+
+    private func test<T>(decoded: Decoded<T>) {
+        switch decoded {
+        case let .success(x): XCTAssert(decoded.description == "Success(\(x))")
+        default: XCTFail("Unexpected Case Occurred")
+        }
     }
 }
 
@@ -14,7 +24,7 @@ class HarvestAPITests: XCTestCase {
 extension HarvestAPITests {
     static var allTests : [(String, (HarvestAPITests) -> () throws -> Void)] {
         return [
-            ("testExample", testExample),
+            /* ("testExample", testExample), */
         ]
     }
 }

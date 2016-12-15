@@ -1,6 +1,56 @@
+import Foundation
+
+import Alamofire
+
 import Argo
 import Curry
 import Runes
+
+public enum Router {
+    case whoami
+    case today
+    case day(at: Date)
+    case addEntry
+
+    public func request(forCompany company: String) throws -> URLRequest {
+        let baseURL = try "https://\(company).harvestapp.com/".asURL()
+
+        var request = URLRequest(url: baseURL.appendingPathComponent(path))
+        request.httpMethod = method.rawValue
+
+        // encode param
+
+        return request
+    }
+
+    public var method: HTTPMethod {
+        switch self {
+        case .whoami, .today, .day:
+            return .get
+        case .addEntry:
+            return .post
+        }
+    }
+
+    public var path: String {
+        switch self {
+        case .whoami:
+            return "/account/who_am_i"
+        case .today:
+            return "/daily"
+        case let .day(date):
+            let day = 1 // calendar.ordinality(of: .day, in: year, for: date)
+            let year = 2017 // calendar.component(.year, from: date)
+            return "/daily/\(day)/\(year)"
+        case .addEntry:
+            return "/daily/add"
+        }
+    }
+}
+
+public enum API {
+
+}
 
 public enum Model {
     public struct Day {

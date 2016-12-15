@@ -12,8 +12,8 @@ public enum Router {
     case day(at: Date)
     case addEntry
 
-    public func request(forCompany company: String) throws -> URLRequest {
-        let baseURL = try "https://\(company).harvestapp.com/".asURL()
+    public func request(forCompany company: String) -> URLRequest {
+        let baseURL = URL(string: "https://\(company).harvestapp.com/")!
 
         var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.httpMethod = method.rawValue
@@ -48,8 +48,17 @@ public enum Router {
     }
 }
 
-public enum API {
+public struct API {
+    public let company: String
 
+    init(company: String) {
+        self.company = company
+    }
+
+    public func addEntry(for: (Model.Project, Model.Task), at date: Date) {
+        let request = Router.addEntry.request(forCompany: company)
+        Alamofire.request(request)
+    }
 }
 
 public enum Model {

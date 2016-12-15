@@ -18,6 +18,18 @@ class HarvestAPITests: XCTestCase {
         test(decoded: task)
     }
 
+    func testDecodingDay() {
+        let day: Decoded<Model.Day> = decode(json(fromFile: "day")!)
+
+        test(decoded: day)
+    }
+
+    func testDecodingEntry() {
+        let entry: Decoded<Model.Entry> = decode(json(fromFile: "entry")!)
+
+        test(decoded: entry)
+    }
+
     private func test<T>(decoded: Decoded<T>) {
         switch decoded {
         case let .success(x): XCTAssert(decoded.description == "Success(\(x))")

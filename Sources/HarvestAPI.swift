@@ -4,12 +4,14 @@ import Runes
 
 public enum Model {
     public struct Day {
-        // public let entries
+        public let dateString: String
+        public let entries: [Entry]
         public let projects: [Project]
-        // public let day: 
     }
 
-    public struct Entry { }
+    public struct Entry {
+        public let hours: Float
+    }
 
     public struct Project {
         public let id: Int
@@ -28,7 +30,16 @@ public enum Model {
 extension Model.Day: Decodable {
     public static func decode(_ json: JSON) -> Decoded<Model.Day> {
         return curry(Model.Day.init)
-            <^> json <|| "projects"
+            <^> json <| "for_day"
+            <*> json <|| "day_entries"
+            <*> json <|| "projects"
+    }
+}
+
+extension Model.Entry: Decodable {
+    public static func decode(_ json: JSON) -> Decoded<Model.Entry> {
+        return curry(Model.Entry.init)
+            <^> json <| "hours"
     }
 }
 
@@ -51,32 +62,11 @@ extension Model.Task: Decodable {
     }
 }
     /** From: https://github.com/NicholasTD07/TTTTT/blob/master/2016-08---Py---Harvest-Season/harvest_season.py
-    entry_payload = {
+    entry_post_payload = {
         'notes': notes,
         'hours': hours,
         'project_id': project.id,
         'task_id': task.id,
         'spent_at': spent_at,
     }
-
-    class Project(JSONDeserilizable):
-        __desired_keys__ = ['name', 'id', 'billable']
-        tasks = None
-
-    class Task(JSONDeserilizable):
-        __desired_keys__ = ['name', 'id', 'billable']
-
-    class Entry(JSONDeserilizable):
-        __desired_keys__ = [
-            'id',
-            'hours',
-            'notes',
-            'client',
-            'spent_at', # u'spent_at': u'2016-08-10',
-
-            'project',
-            'project_id',
-            'task',
-            'task_id',
-        ]
     */

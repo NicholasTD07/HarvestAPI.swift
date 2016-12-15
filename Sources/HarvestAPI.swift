@@ -3,11 +3,19 @@ import Curry
 import Runes
 
 public enum Model {
+    public struct Day {
+        // public let entries
+        public let projects: [Project]
+        // public let day: 
+    }
+
+    public struct Entry { }
+
     public struct Project {
         public let id: Int
         public let name: String
         public let billable: Bool
-        /* public let tasks: [Task] */
+        public let tasks: [Task]
     }
 
     public struct Task {
@@ -17,13 +25,20 @@ public enum Model {
     }
 }
 
+extension Model.Day: Decodable {
+    public static func decode(_ json: JSON) -> Decoded<Model.Day> {
+        return curry(Model.Day.init)
+            <^> json <|| "projects"
+    }
+}
+
 extension Model.Project: Decodable {
     public static func decode(_ json: JSON) -> Decoded<Model.Project> {
         return curry(Model.Project.init)
             <^> json <| "id"
             <*> json <| "name"
             <*> json <| "billable"
-            /* <*> j <| "tasks" */
+            <*> json <|| "tasks"
     }
 }
 

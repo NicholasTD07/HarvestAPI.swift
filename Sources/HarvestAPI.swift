@@ -49,19 +49,50 @@ public enum Router {
 }
 
 public struct API {
-    public let company: String
+    public typealias HTTPBasicAuth = (username: String, password: String)
 
-    init(company: String) {
+    public let company: String
+    private let auth: HTTPBasicAuth
+
+    public init(company: String, auth: HTTPBasicAuth) {
         self.company = company
+        self.auth = auth
+    }
+
+    public func whoami() {
+        let request = Router.whoami.request(forCompany: company)
+        self.request(request, with: auth)
+            .responseJSON { json in
+                let decoded: Decoded<Model.User> = decode(json)
+
+                if let user = decoded.value {
+                    print(user.name)
+                } else { // TODO
+                    print("decoding failed, \(decoded)")
+                }
+            }
     }
 
     public func addEntry(for: (Model.Project, Model.Task), at date: Date) {
         let request = Router.addEntry.request(forCompany: company)
-        Alamofire.request(request)
+        self.request(request, with: auth)
+    }
+
+    private func request(_ request: URLRequest, with auth: HTTPBasicAuth) -> DataRequest {
+        return Alamofire.request(request)
+            .authenticate(user: auth.username, password: auth.password)
     }
 }
 
 public enum Model {
+    public struct User {
+        public let firstName: String
+        public let lastName: String
+
+        public var name: String {
+            return "\(firstName) \(lastName)"
+        }
+    }
     public struct Day {
         public let dateString: String
         public let entries: [Entry]
@@ -83,6 +114,14 @@ public enum Model {
         public let id: Int
         public let name: String
         public let billable: Bool
+    }
+}
+
+extension Model.User: Decodable {
+    public static func decode(_ json: JSON) -> Decoded<Model.User> {
+        return curry(Model.User.init)
+            <^> json <| ["user", "first_name"]
+            <*> json <| ["user", "last_name"]
     }
 }
 

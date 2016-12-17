@@ -6,16 +6,10 @@ import Argo
 import HarvestAPI
 
 class HarvestAPITests: XCTestCase {
-    func testDecodingProject() {
-        let project: Decoded<Model.Project> = decode(json(fromFile: "project")!)
+    func testDecodingUser() {
+        let user: Decoded<Model.User> = decode(json(fromFile: "user")!)
 
-        test(decoded: project)
-    }
-
-    func testDecodingTask() {
-        let task: Decoded<Model.Task> = decode(json(fromFile: "task")!)
-
-        test(decoded: task)
+        test(decoded: user)
     }
 
     func testDecodingDay() {
@@ -28,6 +22,18 @@ class HarvestAPITests: XCTestCase {
         let entry: Decoded<Model.Entry> = decode(json(fromFile: "entry")!)
 
         test(decoded: entry)
+    }
+
+    func testDecodingProject() {
+        let project: Decoded<Model.Project> = decode(json(fromFile: "project")!)
+
+        test(decoded: project)
+    }
+
+    func testDecodingTask() {
+        let task: Decoded<Model.Task> = decode(json(fromFile: "task")!)
+
+        test(decoded: task)
     }
 
     private func test<T>(decoded: Decoded<T>) {

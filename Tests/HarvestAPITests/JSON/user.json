@@ -1,0 +1,39 @@
+{
+  "company": {
+    "base_uri": "https://youraccount.harvestapp.com",
+    "full_domain": "youraccount.harvestapp.com",
+    "name": "Your Harvest Account",
+    "active": true,
+    "week_start_day": "Monday",
+    "time_format": "decimal",
+    "clock": "12h",
+    "decimal_symbol": ".",
+    "color_scheme": "orange",
+    "modules": {
+      "expenses": true,
+      "invoices": true,
+      "estimates": true,
+      "approval": true
+    },
+    "thousands_separator": ",",
+    "plan_type": "trial"
+  },
+  "user": {
+    "timezone": "Eastern Time (US & Canada)",
+    "timezone_identifier": "America/New_York",
+    "timezone_utc_offset": -14400,
+    "id": 12345,
+    "email": "admin@getharvest.com",
+    "admin": true,
+    "first_name": "Admin",
+    "last_name": "User",
+    "avatar_url": "/assets/profile_images/big_ben.png?1389271",
+    "project_manager": {
+      "is_project_manager": true,
+      "can_see_rates": true,
+      "can_create_projects": true,
+      "can_create_invoices": true
+    },
+    "timestamp_timers": true
+  }
+}

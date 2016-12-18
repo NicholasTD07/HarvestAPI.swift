@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
   s.name         = "HarvestAPI"
   s.version      = "0.1"
-  s.summary      = ""
+  s.summary      = "Schwifty API for getharvest.com Edit"
   s.description  = <<-DESC
     Your description here.
   DESC

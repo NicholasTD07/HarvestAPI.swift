@@ -10,10 +10,11 @@ import Curry
 import Runes
 
 public protocol APIType {
-    typealias UserResult = Result<Model.User, API.Error>
-    typealias UserHandler = (_: UserResult) -> Void
+    typealias UserHandler = (_: Result<Model.User, API.Error>) -> Void
+    typealias ProjectsHandler = (_: Result<[Model.Project], API.Error>) -> Void
 
     func user(handler: @escaping UserHandler)
+    func projects(handler: @escaping ProjectsHandler)
 }
 
 extension API {
@@ -47,6 +48,27 @@ public struct API: APIType {
         ]
 
         self.sessionManager = SessionManager(configuration: configuration)
+    }
+
+    public func projects(handler: @escaping APIType.ProjectsHandler) {
+        let request = Router.today.request(forCompany: company)
+        self.request(request)
+            .responseJSON { response in
+                guard let json = response.result.value else {
+                    handler(.failure(.networkFailed(response.result.error!)))
+
+                    return
+                }
+
+                let decoded: Decoded<Model.Day> = decode(json)
+
+                switch decoded {
+                case let .success(value):
+                    handler(.success(value.projects))
+                case let .failure(decodeError):
+                    handler(.failure(.decodingFailed(decodeError)))
+                }
+        }
     }
 
     public func user(handler: @escaping APIType.UserHandler) {

@@ -1,8 +1,8 @@
 import Foundation
 
 import enum Alamofire.HTTPMethod
-import class Alamofire.DataRequest
 import class Alamofire.SessionManager
+import class Alamofire.Request
 import enum Result.Result
 
 import Argo
@@ -37,7 +37,7 @@ public struct API: APIType {
         self.auth = auth
 
         let configuration = URLSessionConfiguration.default
-        let authorizationHeader = DataRequest.authorizationHeader(
+        let authorizationHeader = Request.authorizationHeader(
             user: auth.username,
             password: auth.password
         )!
@@ -51,55 +51,64 @@ public struct API: APIType {
     }
 
     public func projects(handler: @escaping APIType.ProjectsHandler) {
-        let request = Router.today.request(forCompany: company)
-        self.request(request)
-            .responseJSON { response in
-                guard let json = response.result.value else {
-                    handler(.failure(.networkFailed(response.result.error!)))
-
-                    return
-                }
-
-                let decoded: Decoded<Model.Day> = decode(json)
-
-                switch decoded {
-                case let .success(value):
-                    handler(.success(value.projects))
-                case let .failure(decodeError):
-                    handler(.failure(.decodingFailed(decodeError)))
-                }
+        request(Router.today) { (result: Result<Model.Day, API.Error>) in
+            switch result {
+            case let .success(day):
+                handler(.success(day.projects))
+            case let .failure(error):
+                handler(.failure(error))
+            }
         }
     }
 
     public func user(handler: @escaping APIType.UserHandler) {
-        let request = Router.whoami.request(forCompany: company)
-        self.request(request)
-            .responseJSON { response in
-                guard let json = response.result.value else {
-                    handler(.failure(.networkFailed(response.result.error!)))
+        request(Router.whoami, with: handler)
+    }
 
-                    return
-                }
+    private func request<Value>(_ route: Router, with handler: @escaping (_: Result<Value, API.Error>) -> Void)
+        where Value: Decodable, Value.DecodedType == Value {
+            sessionManager.request(route.request(forCompany: company))
+                .responseJSON { response in
+                    guard let json = response.result.value else {
+                        handler(.failure(.networkFailed(response.result.error!)))
 
-                let decoded: Decoded<Model.User> = decode(json)
+                        return
+                    }
 
-                switch decoded {
-                case let .success(user):
-                    handler(.success(user))
-                case let .failure(decodeError):
-                    handler(.failure(.decodingFailed(decodeError)))
-                }
+                    let decoded: Decoded<Value> = decode(json)
+
+                    switch decoded {
+                    case let .success(value):
+                        handler(.success(value))
+                    case let .failure(decodeError):
+                        handler(.failure(.decodingFailed(decodeError)))
+                    }
             }
     }
 
-    public func addEntry(for: (Model.Project, Model.Task), at date: Date) {
-        let request = Router.addEntry.request(forCompany: company)
-        self.request(request)
-    }
+    // Note: This is here for requesting `[Decodable]` types
+    //       Difference to the one above is where `Value` is used, it is replaced with `[Value]`
+    // FIXME: Investigate whether there's a better/more clever way to solve it
+    //        without duplicating 98% of the code
+    private func request<Value>(_ route: Router, with handler: @escaping (_: Result<[Value], API.Error>) -> Void)
+        where Value: Decodable, Value.DecodedType == Value {
+            sessionManager.request(route.request(forCompany: company))
+                .responseJSON { response in
+                    guard let json = response.result.value else {
+                        handler(.failure(.networkFailed(response.result.error!)))
 
-    private func request(_ request: URLRequest) -> DataRequest {
-        let request = sessionManager.request(request)
-        return request
+                        return
+                    }
+
+                    let decoded: Decoded<[Value]> = decode(json)
+
+                    switch decoded {
+                    case let .success(value):
+                        handler(.success(value))
+                    case let .failure(decodeError):
+                        handler(.failure(.decodingFailed(decodeError)))
+                    }
+            }
     }
 }
 

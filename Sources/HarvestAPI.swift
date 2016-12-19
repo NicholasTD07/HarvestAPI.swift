@@ -1,8 +1,8 @@
 import Foundation
 
-import func Alamofire.request
 import enum Alamofire.HTTPMethod
 import class Alamofire.DataRequest
+import class Alamofire.SessionManager
 import enum Result.Result
 
 import Argo
@@ -18,6 +18,7 @@ public protocol APIType {
 
 extension API {
     public enum Error: Swift.Error {
+        case networkFailed(Swift.Error)
         case decodingFailed(DecodeError)
     }
 }
@@ -28,15 +29,36 @@ public struct API: APIType {
     public let company: String
     private let auth: HTTPBasicAuth
 
+    private let sessionManager: SessionManager
+
     public init(company: String, auth: HTTPBasicAuth) {
         self.company = company
         self.auth = auth
+
+        let configuration = URLSessionConfiguration.default
+        let authorizationHeader = DataRequest.authorizationHeader(
+            user: auth.username,
+            password: auth.password
+        )!
+
+        configuration.httpAdditionalHeaders = [
+            "Accept": "application/json",
+            authorizationHeader.key: authorizationHeader.value,
+        ]
+
+        self.sessionManager = SessionManager(configuration: configuration)
     }
 
     public func user(handler: @escaping APIType.UserHandler) {
         let request = Router.whoami.request(forCompany: company)
-        self.request(request, with: auth)
-            .responseJSON { json in
+        self.request(request)
+            .responseJSON { response in
+                guard let json = response.result.value else {
+                    handler(.failure(.networkFailed(response.result.error!)))
+
+                    return
+                }
+
                 let decoded: Decoded<Model.User> = decode(json)
 
                 switch decoded {
@@ -50,12 +72,12 @@ public struct API: APIType {
 
     public func addEntry(for: (Model.Project, Model.Task), at date: Date) {
         let request = Router.addEntry.request(forCompany: company)
-        self.request(request, with: auth)
+        self.request(request)
     }
 
-    private func request(_ request: URLRequest, with auth: HTTPBasicAuth) -> DataRequest {
-        return Alamofire.request(request)
-            .authenticate(user: auth.username, password: auth.password)
+    private func request(_ request: URLRequest) -> DataRequest {
+        let request = sessionManager.request(request)
+        return request
     }
 }
 
@@ -66,7 +88,7 @@ public enum Router {
     case addEntry
 
     public func request(forCompany company: String) -> URLRequest {
-        let baseURL = URL(string: "https://\(company).harvestapp.com/")!
+        let baseURL = URL(string: "https://\(company).harvestapp.com")!
 
         var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.httpMethod = method.rawValue

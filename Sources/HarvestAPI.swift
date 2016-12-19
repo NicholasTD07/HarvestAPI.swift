@@ -1,10 +1,63 @@
 import Foundation
 
-import Alamofire
+import func Alamofire.request
+import enum Alamofire.HTTPMethod
+import class Alamofire.DataRequest
+import enum Result.Result
 
 import Argo
 import Curry
 import Runes
+
+public protocol APIType {
+    typealias UserResult = Result<Model.User, API.Error>
+    typealias UserHandler = (_: UserResult) -> Void
+
+    func user(handler: @escaping UserHandler)
+}
+
+extension API {
+    public enum Error: Swift.Error {
+        case decodingFailed(DecodeError)
+    }
+}
+
+public struct API: APIType {
+    public typealias HTTPBasicAuth = (username: String, password: String)
+
+    public let company: String
+    private let auth: HTTPBasicAuth
+
+    public init(company: String, auth: HTTPBasicAuth) {
+        self.company = company
+        self.auth = auth
+    }
+
+    public func user(handler: @escaping APIType.UserHandler) {
+        let request = Router.whoami.request(forCompany: company)
+        self.request(request, with: auth)
+            .responseJSON { json in
+                let decoded: Decoded<Model.User> = decode(json)
+
+                switch decoded {
+                case let .success(user):
+                    handler(.success(user))
+                case let .failure(decodeError):
+                    handler(.failure(.decodingFailed(decodeError)))
+                }
+            }
+    }
+
+    public func addEntry(for: (Model.Project, Model.Task), at date: Date) {
+        let request = Router.addEntry.request(forCompany: company)
+        self.request(request, with: auth)
+    }
+
+    private func request(_ request: URLRequest, with auth: HTTPBasicAuth) -> DataRequest {
+        return Alamofire.request(request)
+            .authenticate(user: auth.username, password: auth.password)
+    }
+}
 
 public enum Router {
     case whoami
@@ -45,42 +98,6 @@ public enum Router {
         case .addEntry:
             return "/daily/add"
         }
-    }
-}
-
-public struct API {
-    public typealias HTTPBasicAuth = (username: String, password: String)
-
-    public let company: String
-    private let auth: HTTPBasicAuth
-
-    public init(company: String, auth: HTTPBasicAuth) {
-        self.company = company
-        self.auth = auth
-    }
-
-    public func whoami() {
-        let request = Router.whoami.request(forCompany: company)
-        self.request(request, with: auth)
-            .responseJSON { json in
-                let decoded: Decoded<Model.User> = decode(json)
-
-                if let user = decoded.value {
-                    print(user.name)
-                } else { // TODO
-                    print("decoding failed, \(decoded)")
-                }
-            }
-    }
-
-    public func addEntry(for: (Model.Project, Model.Task), at date: Date) {
-        let request = Router.addEntry.request(forCompany: company)
-        self.request(request, with: auth)
-    }
-
-    private func request(_ request: URLRequest, with auth: HTTPBasicAuth) -> DataRequest {
-        return Alamofire.request(request)
-            .authenticate(user: auth.username, password: auth.password)
     }
 }
 

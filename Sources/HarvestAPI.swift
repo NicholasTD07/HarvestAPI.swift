@@ -220,6 +220,19 @@ extension Model.Task: Decodable {
             <*> json <| "billable"
     }
 }
+
+extension Model.Project: Equatable { }
+
+public func == (rhs: Model.Project, lhs: Model.Project) -> Bool {
+    return rhs.id == lhs.id
+}
+
+extension Model.Task: Equatable { }
+
+public func == (rhs: Model.Task, lhs: Model.Task) -> Bool {
+    return rhs.id == lhs.id
+}
+
     /** From: https://github.com/NicholasTD07/TTTTT/blob/master/2016-08---Py---Harvest-Season/harvest_season.py
     entry_post_payload = {
         'notes': notes,

@@ -242,6 +242,22 @@ public func == (rhs: Model.Task, lhs: Model.Task) -> Bool {
     return rhs.id == lhs.id
 }
 
+extension Model.Project {
+    public var description: String {
+        let billableString = billable ? "Billable" : "Non-billable"
+
+        return "\(billableString) \(name)"
+    }
+}
+
+extension Model.Task {
+    public var description: String {
+        let billableString = billable ? "Billable" : "Non-billable"
+
+        return "\(billableString) \(name)"
+    }
+}
+
     /** From: https://github.com/NicholasTD07/TTTTT/blob/master/2016-08---Py---Harvest-Season/harvest_season.py
     entry_post_payload = {
         'notes': notes,

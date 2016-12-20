@@ -10,11 +10,15 @@ import Curry
 import Runes
 
 public protocol APIType {
-    typealias UserHandler = (_: Result<Model.User, API.Error>) -> Void
+    typealias DaysHandler = (_: Result<[Model.Day], API.Error>) -> Void
+    typealias DayHandler = (_: Result<Model.Day, API.Error>) -> Void
     typealias ProjectsHandler = (_: Result<[Model.Project], API.Error>) -> Void
+    typealias UserHandler = (_: Result<Model.User, API.Error>) -> Void
 
-    func user(handler: @escaping UserHandler)
+    func days(from: Date, to: Date, handler: @escaping APIType.DaysHandler)
+    func day(at date: Date, handler: @escaping APIType.DayHandler)
     func projects(handler: @escaping ProjectsHandler)
+    func user(handler: @escaping UserHandler)
 }
 
 extension API {
@@ -48,6 +52,35 @@ public struct API: APIType {
         ]
 
         self.sessionManager = SessionManager(configuration: configuration)
+    }
+
+    public func days(from start: Date, to end: Date, handler: @escaping APIType.DaysHandler) {
+        var results = [Result<Model.Day, API.Error>]()
+        var date = start
+
+        let days = calendar.dateComponents([.day], from: start, to: end).day ?? 1
+
+        repeat {
+
+            day(at: date) {
+                results.append($0)
+
+                // days would be 0 if start and end is the same day
+                if results.count >= days {
+                    let days = results
+                        .flatMap { $0.value }
+                        .sorted { $0.0.date() < $0.1.date() }
+
+                    handler(.success(days))
+                }
+            }
+
+            date = calendar.date(byAdding: .day, value: 1, to: date)!
+        } while date <= end
+    }
+
+    public func day(at date: Date, handler: @escaping APIType.DayHandler) {
+        request(Router.day(at: date), with: handler)
     }
 
     public func projects(handler: @escaping APIType.ProjectsHandler) {
@@ -145,14 +178,16 @@ public enum Router {
         case .today:
             return "/daily"
         case let .day(date):
-            let day = 1 // calendar.ordinality(of: .day, in: year, for: date)
-            let year = 2017 // calendar.component(.year, from: date)
+            let day = calendar.ordinality(of: .day, in: .year, for: date)!
+            let year = calendar.component(.year, from: date)
             return "/daily/\(day)/\(year)"
         case .addEntry:
             return "/daily/add"
         }
     }
 }
+
+private let calendar = Calendar.current
 
 public enum Model {
     public struct User {
@@ -167,6 +202,16 @@ public enum Model {
         public let dateString: String
         public let entries: [Entry]
         public let projects: [Project]
+
+        public func date() -> Date {
+            return Day.dateFormatter.date(from: dateString)!
+        }
+
+        private static let dateFormatter: DateFormatter = {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            return dateFormatter
+        }()
     }
 
     public struct Entry {
@@ -240,6 +285,25 @@ extension Model.Task: Equatable { }
 
 public func == (rhs: Model.Task, lhs: Model.Task) -> Bool {
     return rhs.id == lhs.id
+}
+
+// ViewModel candidates
+extension Model.Day {
+    public func description(forMinimumHours minimumHours: Float) -> String {
+        let hours = entries.reduce(0) { $0 + $1.hours }
+        let isMissingHours = hours < minimumHours
+
+        let hoursString: String
+        if isMissingHours {
+            hoursString = "Missing \(minimumHours - hours) hours"
+        } else {
+            hoursString = "Logged \(hours) hours"
+        }
+
+        let weekday = calendar.component(.weekday, from: date())
+
+        return "\(hoursString) on \(dateString) \(calendar.weekdaySymbols[weekday - 1])"
+    }
 }
 
 extension Model.Project {

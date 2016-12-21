@@ -10,10 +10,11 @@ import Curry
 import Runes
 
 public protocol APIType {
-    typealias DayHandler = (_: Result<Model.Day, API.Error>) -> Void
+    typealias DayHandler = (_ date: Date) -> (_: Result<Model.Day, API.Error>) -> Void
     typealias ProjectsHandler = (_: Result<[Model.Project], API.Error>) -> Void
     typealias UserHandler = (_: Result<Model.User, API.Error>) -> Void
 
+    func days(_ days: [Date], handler: @escaping APIType.DayHandler)
     func day(at date: Date, handler: @escaping APIType.DayHandler)
     func projects(handler: @escaping ProjectsHandler)
     func user(handler: @escaping UserHandler)
@@ -52,8 +53,12 @@ public struct API: APIType {
         self.sessionManager = SessionManager(configuration: configuration)
     }
 
+    public func days(_ days: [Date], handler: @escaping APIType.DayHandler) {
+        days.forEach { day(at: $0, handler: handler) }
+    }
+
     public func day(at date: Date, handler: @escaping APIType.DayHandler) {
-        request(Router.day(at: date), with: handler)
+        request(Router.day(at: date), with: handler(date))
     }
 
     public func projects(handler: @escaping APIType.ProjectsHandler) {

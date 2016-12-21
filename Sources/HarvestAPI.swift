@@ -10,12 +10,10 @@ import Curry
 import Runes
 
 public protocol APIType {
-    typealias DaysHandler = (_: Result<[Model.Day], API.Error>) -> Void
     typealias DayHandler = (_: Result<Model.Day, API.Error>) -> Void
     typealias ProjectsHandler = (_: Result<[Model.Project], API.Error>) -> Void
     typealias UserHandler = (_: Result<Model.User, API.Error>) -> Void
 
-    func days(from: Date, to: Date, handler: @escaping APIType.DaysHandler)
     func day(at date: Date, handler: @escaping APIType.DayHandler)
     func projects(handler: @escaping ProjectsHandler)
     func user(handler: @escaping UserHandler)
@@ -52,31 +50,6 @@ public struct API: APIType {
         ]
 
         self.sessionManager = SessionManager(configuration: configuration)
-    }
-
-    public func days(from start: Date, to end: Date, handler: @escaping APIType.DaysHandler) {
-        var results = [Result<Model.Day, API.Error>]()
-        var date = start
-
-        let days = calendar.dateComponents([.day], from: start, to: end).day ?? 1
-
-        repeat {
-
-            day(at: date) {
-                results.append($0)
-
-                // days would be 0 if start and end is the same day
-                if results.count >= days {
-                    let days = results
-                        .flatMap { $0.value }
-                        .sorted { $0.0.date() < $0.1.date() }
-
-                    handler(.success(days))
-                }
-            }
-
-            date = calendar.date(byAdding: .day, value: 1, to: date)!
-        } while date <= end
     }
 
     public func day(at date: Date, handler: @escaping APIType.DayHandler) {

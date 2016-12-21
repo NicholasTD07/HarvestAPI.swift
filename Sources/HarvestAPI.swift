@@ -185,7 +185,7 @@ public enum Model {
             return Day.dateFormatter.date(from: dateString)!
         }
 
-        private static let dateFormatter: DateFormatter = {
+        public static let dateFormatter: DateFormatter = {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
             return dateFormatter
@@ -267,20 +267,8 @@ public func == (rhs: Model.Task, lhs: Model.Task) -> Bool {
 
 // ViewModel candidates
 extension Model.Day {
-    public func description(forMinimumHours minimumHours: Float) -> String {
-        let hours = entries.reduce(0) { $0 + $1.hours }
-        let isMissingHours = hours < minimumHours
-
-        let hoursString: String
-        if isMissingHours {
-            hoursString = "Missing \(minimumHours - hours) hours"
-        } else {
-            hoursString = "Logged \(hours) hours"
-        }
-
-        let weekday = calendar.component(.weekday, from: date())
-
-        return "\(hoursString) on \(dateString) \(calendar.weekdaySymbols[weekday - 1])"
+    public func hours() -> Float {
+        return entries.reduce(0) { $0 + $1.hours }
     }
 }
 
